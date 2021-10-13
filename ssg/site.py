@@ -1,8 +1,34 @@
- from pathlib import Path
+from pathlib import Path
 
 class Site:
-    def __site__(self, source, dest):
-        self.source = Path()
-        self.dest = Path()
+    def __init__(self, source, dest, parsers=None):
+        self.source = Path(source)
+        self.dest = Path(dest)
+        self.parsers = parsers or []
+
     def create_dir(self, path):
-        directory = "C:\Users\m0mon\OneDrive\Desktop\Python2021\site_gen\ssg"
+        directory = self.dest / path.relative_to(self.source)
+        directory.mkdir(parents = True, exist_ok = True)
+
+    def build(self):
+         self.dest.mkdir(parents = True, exist_ok = True) 
+         for path in self.source.rglob("*"):
+            if path.is_dir():
+                self.create_dir(path)
+            elif path.is_file():
+                self.run_parser(path)
+            else:
+                print("Not Implemented") 
+
+
+    def load_parser(self, extension):
+        for parser in self.parsers:
+            if parser.valid_extension(extension):
+                return parser
+
+    def run_parser(self, path):
+        parser = self.load_parser(path.suffix)
+        if parser is not None:
+            parser.parse(path, self.source, self.dest)
+        else:
+            print("Not Implemented") 
